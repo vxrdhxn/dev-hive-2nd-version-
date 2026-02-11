@@ -1,9 +1,0 @@
-flask
-flask-cors
-openai
-pinecone
-python-dotenv
-requests
-streamlit
-cryptography
-gunicorn

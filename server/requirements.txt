@@ -1,0 +1,9 @@
+flask
+flask-cors
+openai
+pinecone-client
+python-dotenv
+requests
+cryptography
+# gunicorn is for unix production, use waitress for windows or flask dev server
+# streamlit is removed as we use react frontend

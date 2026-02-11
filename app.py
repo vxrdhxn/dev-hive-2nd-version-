@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 KTP - Knowledge Transfer Platform
-Main Application for Render Deployment
-Combines Flask Backend and Streamlit Frontend
+Main Application Launcher
+Combines Flask Backend and React Frontend
 """
 
 import os
@@ -10,47 +10,59 @@ import threading
 import time
 import subprocess
 import sys
+import webbrowser
 from pathlib import Path
 
 def start_flask_backend():
-    """Start Flask backend in a separate thread"""
+    """Start Flask backend"""
     print("📡 Starting Flask backend...")
-    subprocess.run([
-        sys.executable, "-m", "gunicorn", "app:app",
-        "--bind", "0.0.0.0:5000",
-        "--workers", "1",
-        "--timeout", "120"
-    ], cwd="server")
+    
+    # Run server/app.py directly
+    server_path = Path("server/app.py").absolute()
+    
+    try:
+        subprocess.run([sys.executable, str(server_path)], cwd="server", check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Backend failed with error code {e.returncode}")
+    except KeyboardInterrupt:
+        print("\n🛑 Backend stopped")
 
-def start_streamlit_frontend():
-    """Start Streamlit frontend"""
-    print("🎨 Starting Streamlit frontend...")
-    port = os.environ.get('PORT', 8501)
-    subprocess.run([
-        sys.executable, "-m", "streamlit", "run", "streamlit_app.py",
-        "--server.port", str(port),
-        "--server.address", "0.0.0.0",
-        "--server.headless", "true"
-    ], cwd="frontend")
+def start_react_frontend():
+    """Start React frontend"""
+    print("🎨 Starting React frontend...")
+    
+    # Run npm run dev in frontend directory
+    frontend_path = Path("frontend").absolute()
+    
+    try:
+        # Use shell=True for Windows to find npm
+        subprocess.run(["npm", "run", "dev", "--", "--open"], cwd="frontend", shell=True, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Frontend failed with error code {e.returncode}")
+    except KeyboardInterrupt:
+        print("\n🛑 Frontend stopped")
 
 def main():
     print("🧠 KTP - Knowledge Transfer Platform")
-    print("🚀 Starting on Render...")
+    print("🚀 Starting Application...")
     
     # Check if we're in the right directory
     if not Path("server").exists() or not Path("frontend").exists():
         print("❌ Error: Please run this from the project root directory")
         sys.exit(1)
     
-    # Start Flask backend in a separate thread
-    flask_thread = threading.Thread(target=start_flask_backend, daemon=True)
-    flask_thread.start()
+    # Start Backend in a separate thread
+    backend_thread = threading.Thread(target=start_flask_backend, daemon=True)
+    backend_thread.start()
     
-    # Wait a moment for Flask to start
-    time.sleep(5)
+    # Give backend a moment to initialize
+    time.sleep(2)
     
-    # Start Streamlit frontend (this will be the main process)
-    start_streamlit_frontend()
+    # Start Frontend (main thread)
+    try:
+        start_react_frontend()
+    except KeyboardInterrupt:
+        print("\n👋 Shutting down...")
 
 if __name__ == "__main__":
-    main() 
+    main()
