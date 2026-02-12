@@ -14,7 +14,7 @@ from .enhanced_chunker import (
     create_pinecone_vectors,
     generate_content_hash
 )
-from .openai_utils import get_embedding
+from .gemini_utils import get_embedding
 from .pinecone_utils import upsert_chunks, query_chunks
 
 load_dotenv()

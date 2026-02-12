@@ -75,7 +75,7 @@ def check_index_health():
     """Check if the Pinecone index is healthy"""
     try:
         # Try a simple query to test connectivity
-        test_vector = [0.0] * 1536  # OpenAI embedding dimension
+        test_vector = [0.0] * 768  # Gemini embedding dimension
         results = index.query(vector=test_vector, top_k=1, include_metadata=False)
         return True
     except Exception as e:

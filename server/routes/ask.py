@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import logging
-from utils.openai_utils import get_embedding, client
+from utils.gemini_utils import get_embedding, get_chat_completion
 from utils.pinecone_utils import query_chunks, check_index_health
 from utils.activity_tracker import log_qa_activity
 
@@ -46,19 +46,15 @@ Question: {question}
 
 Answer:"""
         
-        # Get answer from OpenAI
-        logger.info("Generating answer with OpenAI...")
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that answers questions based on the provided context."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=500,
-            temperature=0.7
-        )
+        # Get answer from Gemini
+        logger.info("Generating answer with Gemini...")
         
-        answer = response.choices[0].message.content
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that answers questions based on the provided context."},
+            {"role": "user", "content": prompt}
+        ]
+        
+        answer = get_chat_completion(messages)
         
         # Format sources
         sources = []

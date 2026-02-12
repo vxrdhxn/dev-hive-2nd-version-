@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from utils.chunker import chunk_text
-from utils.openai_utils import get_embedding
+from utils.gemini_utils import get_embedding
 from utils.pinecone_utils import upsert_chunks
 from utils.activity_tracker import log_upload_activity
 import uuid

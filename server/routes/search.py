@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import logging
-from utils.openai_utils import get_embedding
+from utils.gemini_utils import get_embedding
 from utils.pinecone_utils import query_chunks, check_index_health
 from utils.activity_tracker import log_search_activity
 

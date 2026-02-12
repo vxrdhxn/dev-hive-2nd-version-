@@ -4,7 +4,7 @@ import json
 import os
 import uuid
 from datetime import datetime
-from utils.openai_utils import client, get_embedding
+from utils.gemini_utils import get_embedding, get_chat_completion
 from utils.pinecone_utils import query_chunks, check_index_health
 from utils.activity_tracker import log_system_activity
 
@@ -178,19 +178,13 @@ Format as JSON:
     "answer": "Your answer here."
 }}"""
 
-        # Generate flashcard using OpenAI
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that creates simple educational flashcards. Always respond with valid JSON."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=300,
-            temperature=0.7
-        )
-
-        # Parse the response
-        content_response = response.choices[0].message.content
+        # Generate flashcard using Gemini
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that creates simple educational flashcards. Always respond with valid JSON."},
+            {"role": "user", "content": prompt}
+        ]
+        
+        content_response = get_chat_completion(messages)
         try:
             import json
             flashcard = json.loads(content_response)

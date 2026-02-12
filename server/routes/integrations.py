@@ -233,10 +233,13 @@ def get_integration_stats():
         if check_index_health():
             try:
                 index_stats = get_index_stats()
-                pinecone_stats = {
-                    "total_vectors": index_stats.get("total_vector_count", 0),
-                    "dimension": index_stats.get("dimension", 0)
-                }
+                if index_stats:
+                    pinecone_stats = {
+                        "total_vectors": index_stats.get("total_vector_count", 0),
+                        "dimension": index_stats.get("dimension", 0)
+                    }
+                else:
+                    pinecone_stats = {"error": "Failed to retrieve stats"}
             except Exception as e:
                 pinecone_stats = {"error": str(e)}
         else:
@@ -254,4 +257,6 @@ def get_integration_stats():
             "stats": combined_stats
         })
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": f"Failed to get stats: {str(e)}"}), 500 
