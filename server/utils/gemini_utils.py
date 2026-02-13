@@ -1,14 +1,21 @@
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from server directory (parent of utils)
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
-# Configure Gemini API
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# Configure Gemini Client
+# The client automatically reads GOOGLE_API_KEY if not passed, 
+# but we can pass api_key explicitly from GEMINI_API_KEY env var if needed.
+api_key = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=api_key)
 
 # Models
-EMBEDDING_MODEL = "models/text-embedding-004"
+EMBEDDING_MODEL = "text-embedding-004"
 CHAT_MODEL = "gemini-1.5-flash"
 
 def get_embedding(text):
@@ -20,12 +27,18 @@ def get_embedding(text):
         return []
     
     try:
-        result = genai.embed_content(
+        # New SDK usage for embeddings
+        result = client.models.embed_content(
             model=EMBEDDING_MODEL,
-            content=text,
-            task_type="retrieval_document"
+            contents=text,
+            config=types.EmbedContentConfig(
+                task_type="RETRIEVAL_DOCUMENT"
+            )
         )
-        return result['embedding']
+        # Result structure: result.embeddings[0].values
+        if result.embeddings:
+            return result.embeddings[0].values
+        return []
     except Exception as e:
         print(f"Error generating embedding: {e}")
         return []
@@ -36,18 +49,14 @@ def get_chat_completion(messages):
     Converts OpenAI-style messages format to Gemini format.
     """
     try:
-        model = genai.GenerativeModel(CHAT_MODEL)
-        
-        # Convert messages to Gemini history format
-        # OpenAI format: [{"role": "system", "content": "..."}, {"role": "user", "content": "..."}]
-        # Gemini format: history=[{"role": "user", "parts": ["..."]}, {"role": "model", "parts": ["..."]}]
-        # System instruction is set at model initialization (not fully supported in same way as openai in simple calls,
-        # but we can prepend it or use system_instruction arg if using latest SDK)
-        
+        # Convert messages to string prompts or structured content
+        # For simple RAG/Chat, we can concatenate or use the chat helper if we maintain history.
+        # Since this function seems to receive a full list of messages each time (stateless wrapper),
+        # we can construct the prompt.
+
         system_instruction = None
-        gemini_history = []
-        last_user_message = ""
-        
+        contents = []
+
         for msg in messages:
             role = msg["role"]
             content = msg["content"]
@@ -55,31 +64,27 @@ def get_chat_completion(messages):
             if role == "system":
                 system_instruction = content
             elif role == "user":
-                last_user_message = content
-                # If there are previous messages, add to history
+                contents.append(types.Content(
+                    role="user",
+                    parts=[types.Part.from_text(text=content)]
+                ))
             elif role == "assistant":
-                if gemini_history or last_user_message: 
-                     # Gemini requires strictly alternating user/model turns in history
-                     # This is a simplified conversion; a robust one handles edge cases
-                     pass
+                contents.append(types.Content(
+                    role="model",
+                    parts=[types.Part.from_text(text=content)]
+                ))
+        
+        # Determine config
+        config = types.GenerateContentConfig(
+            system_instruction=system_instruction
+        )
 
-        # For simple RAG usage (System + User Question), we can just construct a prompt
-        # because Gemini doesn't strictly adhere to the "messages" list in the same way for single-turn generation
+        response = client.models.generate_content(
+            model=CHAT_MODEL,
+            contents=contents,
+            config=config
+        )
         
-        prompt_parts = []
-        if system_instruction:
-            prompt_parts.append(f"System: {system_instruction}\n")
-        
-        # Add conversation history if needed, but for now RAG is usually single turn
-        for msg in messages:
-            if msg["role"] == "user":
-                prompt_parts.append(f"User: {msg['content']}")
-            elif msg["role"] == "assistant":
-                prompt_parts.append(f"Model: {msg['content']}")
-                
-        full_prompt = "\n".join(prompt_parts)
-        
-        response = model.generate_content(full_prompt)
         return response.text
         
     except Exception as e:

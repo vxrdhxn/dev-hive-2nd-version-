@@ -7,39 +7,39 @@ export default defineConfig({
   server: {
     proxy: {
       '/stats': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5500',
         changeOrigin: true,
       },
       '/search': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5500',
         changeOrigin: true,
       },
       '/ask': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5500',
         changeOrigin: true,
       },
       '/ingest': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5500',
         changeOrigin: true,
       },
       '/health': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5500',
         changeOrigin: true,
       },
       '/integrate': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5500',
         changeOrigin: true,
       },
       '/activities': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5500',
         changeOrigin: true,
       },
       '/flashcards': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5500',
         changeOrigin: true,
       },
       '/tokens': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5500',
         changeOrigin: true,
       },
     },
